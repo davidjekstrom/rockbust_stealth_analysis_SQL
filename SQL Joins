@@ -1,0 +1,74 @@
+-- Task 3.7.1: Write a query to find the top 10 countries for Rockbuster in terms of customer numbers.
+
+SELECT cntry.country,
+	   COUNT(customer_id) AS customer_count
+FROM customer AS cstmr
+	INNER JOIN address AS addrs ON cstmr.address_id = addrs.address_id
+	INNER JOIN city AS cty ON addrs.city_id = cty.city_id
+	INNER JOIN country AS cntry ON cty.country_id = cntry.country_id
+GROUP BY country
+ORDER BY customer_count DESC
+LIMIT 10
+
+
+-- Task 3.7.2: Write a query to identify the top 10 cities that fall within the top 10 countries you identified in step 1.
+
+SELECT cntry2.country,
+	   cty2.city,
+	   COUNT(customer_id) AS customer_count
+FROM customer AS cstmr2
+	INNER JOIN address AS addrs2 ON cstmr2.address_id = addrs2.address_id
+	INNER JOIN city AS cty2 ON addrs2.city_id = cty2.city_id
+	INNER JOIN country AS cntry2 ON cty2.country_id = cntry2.country_id
+WHERE country IN
+	(SELECT cntry.country
+	FROM customer AS cstmr
+		INNER JOIN address AS addrs ON cstmr.address_id = addrs.address_id
+		INNER JOIN city AS cty ON addrs.city_id = cty.city_id
+		INNER JOIN country AS cntry ON cty.country_id = cntry.country_id
+	GROUP BY country
+	ORDER BY COUNT(customer_id) DESC
+	LIMIT 10)
+GROUP BY country, city
+ORDER BY customer_count DESC
+LIMIT 10
+
+
+-- Task 3.7.3: Now write a query to find the top 5 customers from the top 10 cities who’ve paid the highest total amounts to Rockbuster. The customer team would like to reward them for their loyalty!
+
+SELECT cstmr3.customer_id,
+	   cstmr3.first_name,
+	   cstmr3.last_name,
+	   ctry3.country,
+	   cty3.city,
+       SUM(pymnt.amount) AS total_amount_paid
+FROM payment AS pymnt
+	INNER JOIN customer AS cstmr3 ON pymnt.customer_id = cstmr3.customer_id
+	INNER JOIN address AS addr3 ON cstmr3.address_id = addr3.address_id
+	INNER JOIN city AS cty3 ON addr3.city_id = cty3.city_id
+	INNER JOIN country AS ctry3 ON cty3.country_id = ctry3.country_id
+WHERE city IN
+	(SELECT cty2.city
+	FROM customer AS cstmr2
+	INNER JOIN address AS addr2 ON cstmr2.address_id = addr2.address_id
+	INNER JOIN city AS cty2 ON addr2.city_id = cty2.city_id
+	INNER JOIN country AS ctry2 ON cty2.country_id = ctry2.country_id
+	WHERE country IN
+		(SELECT ctry.country
+		FROM customer AS cstmr
+		INNER JOIN address AS addr ON cstmr.address_id = addr.address_id
+		INNER JOIN city AS cty ON addr.city_id = cty.city_id
+		INNER JOIN country AS ctry ON cty.country_id = ctry.country_id
+		GROUP BY country
+		ORDER BY count(customer_id) DESC
+		LIMIT 10)
+	GROUP BY country, city
+	ORDER BY COUNT(customer_id) DESC
+	LIMIT 10)
+GROUP BY cstmr3.customer_id,
+		 cstmr3.first_name,
+  		 cstmr3.last_name,
+		 ctry3.country,
+		 cty3.city
+ORDER BY total_amount_paid DESC
+LIMIT 5
