@@ -1,0 +1,85 @@
+-- Find the average amount paid by the top 5 customers.
+
+SELECT AVG(total_amount_paid) AS average
+FROM (SELECT cstmr3.customer_id,
+	   cstmr3.first_name,
+	   cstmr3.last_name,
+	   ctry3.country,
+	   cty3.city,
+	   SUM(pymnt.amount) AS total_amount_paid
+FROM payment AS pymnt
+	 INNER JOIN customer AS cstmr3 ON pymnt.customer_id = cstmr3.customer_id
+     INNER JOIN address AS addr3 ON cstmr3.address_id = addr3.address_id
+     INNER JOIN city AS cty3 ON addr3.city_id = cty3.city_id
+     INNER JOIN country AS ctry3 ON cty3.country_id = ctry3.country_id
+WHERE city IN
+(SELECT cty2.city
+FROM customer AS cstmr2
+	 INNER JOIN address AS addr2 ON cstmr2.address_id = addr2.address_id
+ 	 INNER JOIN city AS cty2 ON addr2.city_id = cty2.city_id
+ 	 INNER JOIN country AS ctry2 ON cty2.country_id = ctry2.country_id
+WHERE country IN
+(SELECT ctry.country
+FROM customer AS cstmr
+	 INNER JOIN address AS addr ON cstmr.address_id = addr.address_id
+ 	 INNER JOIN city AS cty ON addr.city_id = cty.city_id
+ 	 INNER JOIN country AS ctry ON cty.country_id = ctry.country_id
+GROUP BY country
+ORDER BY count(customer_id) DESC
+LIMIT 10)
+GROUP BY country, city
+ORDER BY COUNT(customer_id) DESC
+LIMIT 10)
+GROUP BY cstmr3.customer_id,
+	   cstmr3.first_name,
+	   cstmr3.last_name,
+	   ctry3.country,
+	   cty3.city
+ORDER BY total_amount_paid DESC
+LIMIT 5) AS total_amount_paid;
+
+-- Find out how many of the top 5 customers you identified in step 1 are based within each country.
+
+SELECT D.country,
+	   COUNT(DISTINCT A.customer_id) AS all_customer_count,
+ 	   COUNT(DISTINCT top_5_customers.customer_id) AS top_customer_count
+FROM customer A
+	 INNER JOIN address B ON A.address_id = B.address_id
+	 INNER JOIN city C ON B.city_id = C.city_id
+	 INNER JOIN country D ON C.country_id = D.country_id
+	 LEFT JOIN
+(SELECT cstmr3.customer_id,
+	   ctry3.country
+FROM payment AS pymnt
+	 INNER JOIN customer AS cstmr3 ON pymnt.customer_id = cstmr3.customer_id
+     INNER JOIN address AS addr3 ON cstmr3.address_id = addr3.address_id
+     INNER JOIN city AS cty3 ON addr3.city_id = cty3.city_id
+     INNER JOIN country AS ctry3 ON cty3.country_id = ctry3.country_id
+WHERE city IN
+(SELECT cty2.city
+FROM customer AS cstmr2
+	 INNER JOIN address AS addr2 ON cstmr2.address_id = addr2.address_id
+ 	 INNER JOIN city AS cty2 ON addr2.city_id = cty2.city_id
+ 	 INNER JOIN country AS ctry2 ON cty2.country_id = ctry2.country_id
+WHERE country IN
+(SELECT ctry.country
+FROM customer AS cstmr
+	 INNER JOIN address AS addr ON cstmr.address_id = addr.address_id
+ 	 INNER JOIN city AS cty ON addr.city_id = cty.city_id
+ 	 INNER JOIN country AS ctry ON cty.country_id = ctry.country_id
+GROUP BY country
+ORDER BY count(customer_id) DESC
+LIMIT 10)
+GROUP BY country, city
+ORDER BY COUNT(customer_id) DESC
+LIMIT 10)
+GROUP BY cstmr3.customer_id,
+	   cstmr3.first_name,
+	   cstmr3.last_name,
+	   ctry3.country,
+	   cty3.city
+ORDER BY SUM(pymnt.amount) DESC
+LIMIT 5) AS top_5_customers
+ON D.country = top_5_customers.country
+GROUP BY D.country
+ORDER BY all_customer_count DESC;
