@@ -1,4 +1,4 @@
--- Task 3.7.1: Write a query to find the top 10 countries for Rockbuster in terms of customer numbers.
+-- Write a query to find the top 10 countries for Rockbuster in terms of customer numbers.
 
 SELECT cntry.country,
 	   COUNT(customer_id) AS customer_count
@@ -11,7 +11,7 @@ ORDER BY customer_count DESC
 LIMIT 10
 
 
--- Task 3.7.2: Write a query to identify the top 10 cities that fall within the top 10 countries you identified in step 1.
+-- Write a query to identify the top 10 cities that fall within the top 10 countries you identified in step 1.
 
 SELECT cntry2.country,
 	   cty2.city,
@@ -34,7 +34,7 @@ ORDER BY customer_count DESC
 LIMIT 10
 
 
--- Task 3.7.3: Now write a query to find the top 5 customers from the top 10 cities who’ve paid the highest total amounts to Rockbuster. The customer team would like to reward them for their loyalty!
+-- Now write a query to find the top 5 customers from the top 10 cities who’ve paid the highest total amounts to Rockbuster. The customer team would like to reward them for their loyalty!
 
 SELECT cstmr3.customer_id,
 	   cstmr3.first_name,
